@@ -1,7 +1,5 @@
 name: Windows
-
 on: [push, pull_request]
-
 jobs:
   msbuild:
     runs-on: ${{ matrix.os }}
@@ -20,6 +18,14 @@ jobs:
     - name: Build
       shell: cmd
       run: msbuild Osiris.sln /p:Platform=x64 /p:Configuration=${{ matrix.configuration }} ${{ env.toolset }}
+    - name: Upload msbuild artifacts (Release only)
+      if: matrix.configuration == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Osiris-msbuild-${{ matrix.os }}-${{ matrix.toolset }}
+        path: |
+          x64/Release/Osiris.dll
+          x64/Release/Osiris.pdb
 
   cmake:
     runs-on: ${{ matrix.os }}
@@ -45,3 +51,11 @@ jobs:
       run: ctest -R ^Unit --test-dir build --output-on-failure --no-tests=error --schedule-random -j $env:NUMBER_OF_PROCESSORS
     - name: run functional tests
       run: ctest -R ^Functional --test-dir build --output-on-failure --no-tests=error --schedule-random -j $env:NUMBER_OF_PROCESSORS
+    - name: Upload cmake artifacts (Release only)
+      if: matrix.configuration == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Osiris-cmake-${{ matrix.os }}-${{ matrix.toolset }}
+        path: |
+          build/${{ matrix.configuration }}/Osiris.dll
+          build/${{ matrix.configuration }}/Osiris.pdb
